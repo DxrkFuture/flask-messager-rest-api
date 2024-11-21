@@ -1,0 +1,12 @@
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.5
+Flask-JWT-Extended==4.5.2
+Flask-Mail==0.9.1
+psycopg2-binary==2.9.6
+python-dotenv==1.0.0
+Werkzeug==2.3.6
+itsdangerous==2.1.2
+boto3==1.26.153
+emoji==2.2.0
+requests
+bs4

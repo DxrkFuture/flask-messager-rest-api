@@ -89,6 +89,63 @@
     ```
 
     **Далее все операции будут выполнятся с этим токеном**
+
+### Роуты для управления пользователем
+- GET /profile/search/ + username пользователя
+
+    **Поиск пользователей по никнейму и получение user_id для создания чатов**
+
+    К примеру GET /profile/search/user
+
+     Заголовок:
+    ```text
+    Authorization: Bearer <токен>
+    ```
+
+    Ответ на запрос:
+    ```json
+    [
+        {
+            "bio": null,
+            "is_private": false,
+            "user_id": 1,
+            "username": "username2"
+        },
+        {
+            "bio": "Я человек. Дальше не придумал",
+            "is_private": false,
+            "user_id": 2,
+            "username": "username1"
+        }
+    ]
+    ```
+
+- GET /profile/<user_id>
+
+    **Получение информации о любом пользователе и статус приватности у каждого пользователя для скрытия конфидициальной информации**
+
+    К примеру GET /profile/2
+
+    Ответ:
+    ```json
+    {
+        "bio": "Я человек. Дальше не придумал",
+        "birth_date": null,
+        "email": "username1@localhost",
+        "is_private": false,
+        "location": "страна и город",
+        "username": "username1"
+    }
+    ```
+    При ```is_private: true``` ответ:
+    ```json
+    {
+        "bio": "Я человек. Дальше не придумал",
+        "is_private": true,
+        "username": "username1"
+    }
+    ```
+
 ### Роуты для чатов
 - GET /chats
 

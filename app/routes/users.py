@@ -51,3 +51,63 @@ def profile():
         return jsonify({'error': str(e)}), 500
     finally:
         db.session.remove()  # Очищаем сессию после каждого действия
+
+@bp.route('/profile/search/<string:username>', methods=['GET'])
+@jwt_required()
+def search_user_by_username(username):
+    try:
+        # Ищем пользователей с похожими именами
+        users = Users.query.filter(Users.username.ilike(f"%{username}%")).all()
+        
+        if not users:
+            return jsonify({'message': 'No users found'}), 404
+
+        # Формируем список результатов
+        results = [
+            {
+                'user_id': user.id,
+                'username': user.username,
+                'bio': user.profile.bio if user.profile else None,
+                'is_private': user.profile.is_private if user.profile else False
+            } for user in users
+        ]
+
+        return jsonify(results), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.session.remove()  # Очищаем сессию после каждого действия
+
+@bp.route('/profile/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_user_profile(user_id):
+    try:
+        # Получаем профиль пользователя по user_id
+        user = Users.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        profile = user.profile
+        if not profile:
+            return jsonify({'error': 'Profile not found'}), 404
+
+        # Проверяем, является ли профиль приватным
+        profile_data = {
+            'username': user.username,
+            'bio': profile.bio,
+            'is_private': profile.is_private
+        }
+        if not profile.is_private:
+            profile_data.update({
+                'email': user.email,
+                'location': profile.location,
+                'birth_date': profile.birth_date.isoformat() if profile.birth_date else None,
+            })
+
+        return jsonify(profile_data), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.session.remove()  # Очищаем сессию после каждого действия

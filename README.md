@@ -1,6 +1,6 @@
 # Chat Application
 
-Этот проект предоставляет простой REST API мессенджер, включая авторизацию, регистрацию, создание и просмотр чатов, а также отправку сообщений. Веб-приложение работает на Python и библиотеками Flask.
+Этот проект предоставляет простой REST API мессенджер, включая авторизацию, регистрацию, создание и просмотр чатов, а также отправку сообщений. Веб-приложение работает на Python, PostgreSQL и библиотеками Flask
 
 ## Установка и запуск
 
@@ -56,7 +56,7 @@
 
     **Регистрация нового пользователя.**
 
-    Параметры (JSON):
+    **Запрос:**
     ```json
     {
         "username": "имя_пользователя",
@@ -64,45 +64,149 @@
         "password": "пароль"
     }
     ```
-    Ответ:
+    **Ответы:**
+
+    HTTP 201
     ```json
     {
-        "message": "Пользователь успешно зарегистрирован"
+        "message": "User created successfully"
     }
     ```
+    HTTP 400
+    ```json
+    {
+        "error": "Username already exists"
+    }
+    ```
+    ИЛИ
+    ```json
+    {
+        "error": "Email already registered"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
+    }
+    ```
+    
 - POST /login
 
     **Авторизация пользователя.**
 
-    Параметры (JSON):
+    **Запрос:**
     ```json
     {
         "username": "имя_пользователя",
         "password": "пароль"
     }
     ```
-    Ответ:
+    **Ответы:**
+
+    HTTP 200
     ```json
     {
         "access_token": "токен"
     }
     ```
+    HTTP 401
+    ```json
+    {
+        "error": "Invalid username or password"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
+    }
+    ```
 
-    **Далее все операции будут выполнятся с этим токеном**
+## Далее все операции будут выполнятся с этим токеном
+
+**Заголовок:**
+    ```
+    Authorization: Bearer <токен>
+    ```
 
 ### Роуты для управления пользователем
+- GET /profile
+
+    **Получение информации об своих данных профиля**
+
+    **Ответы:**
+
+    HTTP 200
+    ```json
+    {
+        "bio": "Я человек. Дальше не придумал",
+        "birth_date": null,
+        "email": "username1@localhost",
+        "is_private": false,
+        "location": "страна и город",
+        "username": "username1"
+    }
+    ```
+    HTTP 404
+    ```json
+    {
+        "error": "User not found"
+    }
+    ```
+    ИЛИ
+    ```json
+    {
+        "error": "Profile not found"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
+    }
+    ```
+
+- PUT /profile
+
+    **Обновление информации об своих данных профиля**
+
+    **Запрос:**
+    ```json
+    {
+        "bio": "Я человек. Дальше не придумал",
+        "birth_date": 2024-12-4, // или без "birth_date"
+        "email": "username1@localhost",
+        "is_private": false,
+        "location": "страна Россия г. Мариуполь",
+        "username": "username1"
+    }
+    ```
+    **Ответы:**
+
+    HTTP 200
+    ```json
+    {
+        "message": "Profile updated successfully"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exeption..."
+    }
+    ```
+    
 - GET /profile/search/ + username пользователя
 
     **Поиск пользователей по никнейму и получение user_id для создания чатов**
 
     К примеру GET /profile/search/user
 
-     Заголовок:
-    ```text
-    Authorization: Bearer <токен>
-    ```
 
-    Ответ на запрос:
+    **Ответы:**
+
+    HTTP 200
     ```json
     [
         {
@@ -119,6 +223,12 @@
         }
     ]
     ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exeption..."
+    }
+    ```
 
 - GET /profile/<user_id>
 
@@ -126,7 +236,9 @@
 
     К примеру GET /profile/2
 
-    Ответ:
+    **Ответы:**
+
+    HTTP 200
     ```json
     {
         "bio": "Я человек. Дальше не придумал",
@@ -145,60 +257,178 @@
         "username": "username1"
     }
     ```
+    HTTP 404
+    ```json
+    {
+        "error": "User not found"
+    }
+    ```
+    ИЛИ
+    ```json
+    {
+        "error": "Profile not found"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exeption..."
+    }
+    ```
 
 ### Роуты для чатов
 - GET /chats
 
     **Получение списка чатов, в которых состоит пользователь.**
     
-    Заголовок:
-    ```text
-    Authorization: Bearer <токен>
-    ```
-    Ответ:
+    **Ответы:**
+    HTTP 200
     ```json
     [
         {
+            "created_at": "2024-11-13T19:43:47.312036", // дата создания
             "id": 1,
             "name": "Название чата",
-            "participants": [1, 2, 3]
-        }
+            "participants": [1, 2]
+        },
+        {
+        "created_at": "2024-11-13T19:45:48.908727",
+        "id": 2,
+        "name": "Название 2 чата",
+        "participants": [
+            1,
+            3
+        ]
+    },
     ]
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exeption..."
+    }
     ```
 
 - POST /chats
 
     **Создание нового чата.**
 
-    Параметры (JSON):
+    **Запрос:**
     ```json
     {
         "name": "Название чата",
         "participant_ids": [2, 3]
     }
     ```
-    Ответ:
+    **Ответы:**
+
+    HTTP 201
     ```json
     {
-        "id": 1,
+        "created_at": "2024-12-04T21:02:07.218768",
+        "id": 5,
         "name": "Название чата",
-        "participants": [1, 2, 3]
+        "participants": [
+            1,
+            2
+        ]
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exeption..."
+    }
+    ```
+- GET /chats/<chat_id>
+
+    **Вывод выбраного чата**
+    
+    **Ответы:**
+
+    HTTP 200
+    ```json
+    {
+        "created_at": "2024-11-13T19:43:47.312036",
+        "id": 1,
+        "name": "Название чата номер 1",
+        "participants": [
+            1,
+            2
+        ]
+    }
+    ```
+    HTTP 404
+    ```json
+    {
+        "error": "Chat not found or access denied"
+    }
+    HTTP 500
+    ```json
+    {
+        "error": "Exeption..."
     }
     ```
 
+- PUT /chats/<chat_id>
+
+    **Обновление названия чата**
+
+    **Запрос:**
+    ```json
+    {
+        "name": "Новое название чата 1"
+    }
+    ```
+    **Ответы:**
+    HTTP 200
+    ```json
+    {
+        "created_at": "2024-11-13T19:43:47.312036",
+        "id": 1,
+        "name": "Новое название чата 1",
+        "participants": [
+            1,
+            2
+        ]
+    }
+    ```
+    HTTP 404
+    ```json
+    {
+        "error": "Chat not found or access denied"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
+    }
+    ```
 ### Роуты для сообщений
 
 - GET /chats/<chat_id>/messages
 
     **Получение всех сообщений в чате.**
-    Ответ:
+
+    **Ответ:**
+
+    HTTP 200
     ```json
     [
         {
-            "id": 1,
-            "content": "Сообщение",
-            "timestamp": "2024-11-21T10:00:00",
-            "user_id": 1
+            "chat_id": 1, //номер чата
+            "content": "Сообщение от пользователя с ID 1",
+            "id": 7, //номер сообщения
+            "timestamp": "2024-11-16T17:37:01.041250",
+            "user_id": 1 //user_id пользователя
+        },
+        {
+            "chat_id": 1, //номер чата
+            "content": "Сообщение от пользователя с ID 2",
+            "id": 16, //номер сообщения
+            "timestamp": "2024-12-01T16:32:39.284799",
+            "user_id": 2 //user_id пользователя
         }
     ]
     ```
@@ -212,16 +442,97 @@
         "content": "Текст сообщения"
     }
     ```
-    Ответ:
+    **Ответы:**
+
+    HTTP 201
     ```json
     {
-        "id": 2,
+        "chat_id": 1,
         "content": "Текст сообщения",
-        "timestamp": "2024-11-21T10:05:00",
-        "user_id": 1
+        "id": 19,
+        "timestamp": "2024-12-04T21:15:45.784162",
+        "user_id": 2
+    }
+    ```
+    HTTP 400
+    ```json
+    {
+        "error": "Content is required"
+    }
+    ```
+    HTTP 404
+    ```json
+    {
+        "error": "Chat not found or access denied"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
     }
     ```
 
+- PUT /messages/<message_id>
+
+    **Изменение структуры сообщения**
+
+    **Запрос:**
+    ```json
+    {
+        "content": "Текст сообщения изменённый"
+    }
+    ```
+    **Ответы:**
+
+    HTTP 200
+    ```json
+    {
+        "chat_id": 1,
+        "content": "Текст сообщения изменённый",
+        "id": 19,
+        "timestamp": "2024-12-04T21:15:45.784162",
+        "user_id": 2
+    }
+    ```
+    HTTP 404
+    ```json
+    {
+        "error": "Message not found or access denied"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
+    }
+    ```
+
+- DELETE /messages/<message_id>
+
+    **Удаление сообщения**
+
+    **Ответы:**
+
+    HTTP 200
+    ```json
+    {
+        "message": "Message deleted successfully"
+    }
+    ```
+    HTTP 404
+    ```json
+    {
+        "error": "Message not found or access denied"
+    }
+    ```
+    HTTP 500
+    ```json
+    {
+        "error": "Exception..."
+    }
+    ```
+    
 # Структура проекта
 
 `run.py` - Основной файл запуска Flask API.
